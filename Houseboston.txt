@@ -1,0 +1,171 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+%matplotlib inline
+warnings.filterwarnings('ignore')
+
+df=pd.read_csv("C:/Users/admin/Downloads/archive (12)/HousingData.csv")
+df.head()
+
+
+df.drop(columns=['TAX'],axis=0,inplace=True)
+
+
+df.describe()
+
+df.info()
+
+df1=df.copy()
+df1
+
+
+df1.isnull().sum()
+
+df1['RAD'].mean()
+
+df1['RAD'].fillna(df1['RAD'].mean(),inplace=True)
+
+df1['RAD'].isnull().sum()
+
+df1.isnull().sum()
+
+corr = df1.corr()
+plt.figure(figsize=(20,10))
+sns.heatmap(corr,annot=True,cmap='coolwarm')
+
+
+
+def correlation(dataset,threshold):
+    col_corr=set()
+    corr_matrix=dataset.corr()
+    for i in range(len(corr_matrix.columns)):
+        for j in range(i):
+            if abs(corr_matrix.iloc[i,j])>threshold:
+                colname=corr_matrix.columns[i]
+                col_corr.add(colname)
+    return col_corr
+
+corr_features=correlation(df1,0.7)
+len(set(corr_features))
+
+
+corr_features
+
+
+df1.drop(['AGE','NOX','DIS',],axis=1,inplace=True)
+df1
+
+
+plt.figure(figsize=(15,5))
+plt.subplot(1,2,1)
+plt.title('CRIM')
+sns.boxplot(df1['CRIM'])
+
+plt.subplot(1,2,2)
+plt.title('CRIM')
+sns.distplot(df1['CRIM'])
+
+
+plt.figure(figsize=(15,5))
+plt.subplot(1,2,1)
+plt.title('RM')
+sns.boxplot(df1['RM'])
+
+plt.subplot(1,2,2)
+plt.title('RM')
+sns.distplot(df1['RM'])
+
+
+q1=df['RM'].quantile(0.25)
+q3=df['RM'].quantile(0.75)
+iqr=q3-q1
+
+q1,q3,iqr
+
+upper_limit=q3+(1.5*iqr)
+lower_limit=q1-(1.5*iqr)
+upper_limit,lower_limit
+
+
+df1.loc[(df1['RM']>upper_limit)|(df1['RM']<lower_limit)]
+
+df1.loc[(df['RM']>upper_limit),'RM']=upper_limit
+df1.loc[(df['RM']<lower_limit),'RM']=lower_limit
+
+plt.figure(figsize=(15,5))
+plt.subplot(1,2,1)
+plt.title('RM')
+sns.boxplot(df1['RM'])
+
+plt.subplot(1,2,2)
+plt.title('RM')
+sns.distplot(df1['RM'])
+
+
+x=df1.drop(columns=['MEDV'],axis=1)
+y=df1['MEDV']
+
+
+x
+
+y
+
+from sklearn.model_selection import train_test_split
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.2,random_state=5)
+
+
+
+from sklearn.preprocessing import MinMaxScaler
+Scaler=MinMaxScaler()
+Scaler.fit(x_train)
+x_train_Scaled=Scaler.transform(x_train)
+x_test_Scaled=Scaler.transform(x_test)
+
+x_train_Scaled
+
+x_test_Scaled
+
+
+def train(model,x,y):
+    model.fit(x_train,y_train)
+
+    
+    global pred
+    pred=model.predict(x_test)
+
+
+def evaluate_model():
+    from sklearn.model_selection import cross_val_score, train_test_spilt
+    from sklearn.metrics import mean_square_error, mean_absolute_error,r2_score
+    cv_score= cross_val_score(model,x,y,scoring='neg_mean_squared_error',cv=5)
+    cv_score= np.abs(np.mean(cv_score))
+    
+    print("model report")
+    print("MSE:",mean_squard_error(y_test,pred))
+    print('cv score:',cv_score)
+    print("MAE:",mean_absolute_error(y_test,pred))
+    print("RMSE",np.sqrt(mean_squared_error(y_test,pred)))
+    print("r-square",r2_score(y_test,pred))
+
+    
+
+from sklearn.linear_model import LinearRegression
+model=LinearRegression(normalize=True)
+
+train(model,x,y)
+evaluate_model()
+
+
+from sklearn.tree import DecisionTreeRegressor
+model=DecisionTreeRegressor()
+train(model,x,y)
+evaluate_model()
+
+
+
+
+
+
+
